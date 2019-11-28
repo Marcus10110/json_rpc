@@ -25,7 +25,7 @@ def findClasses(root):
             if child.kind == clang.cindex.CursorKind.CLASS_DECL:
                 if any([c for c in child.get_children()
                         if c.kind == clang.cindex.CursorKind.ANNOTATE_ATTR]):
-                    classes.append(child)
+                    classes.append({'klass': child, 'namespace': namespace})
 
     return classes
 
@@ -57,9 +57,11 @@ for header in headerFiles:
     # find_typerefs(tu.cursor, 0)
     classes = findClasses(tu.cursor)
     methods = []
-    for klass in classes:
+    for pair in classes:
+        klass = pair['klass']
         methods = methods + processClass(klass)
-    generatedContents = tpl.render(methods=methods)
+    generatedContents = tpl.render(
+        methods=methods, klass=classes[0]['namespace'].displayname+'::'+classes[0]['klass'].displayname, include=os.path.basename(header))
     newFilePath = os.path.splitext(header)[0] + '.gen.h'
     print(newFilePath)
     text_file = open(newFilePath, "w")

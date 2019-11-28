@@ -1,3 +1,4 @@
+#pragma once
 #include <string>
 
 // tag classes to auto-generate with GENERATE
