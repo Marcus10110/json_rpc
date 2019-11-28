@@ -22,7 +22,7 @@ void ParseMessage( Api::GraphServer& target, std::string message )
         int node_id;
         archive( CEREAL_NVP( node_id ) );
 
-        auto result = target.RemoveNode(
+        target.RemoveNode(
             node_id
         );
     } else if( function == "ConnectPipe" ) {
@@ -51,7 +51,7 @@ void ParseMessage( Api::GraphServer& target, std::string message )
         int pipe_id;
         archive( CEREAL_NVP( pipe_id ) );
 
-        auto result = target.DisconnectPipe(
+        target.DisconnectPipe(
             pipe_id
         );
     } else if( function == "ConnectApi" ) {
@@ -68,7 +68,7 @@ void ParseMessage( Api::GraphServer& target, std::string message )
         int api_id;
         archive( CEREAL_NVP( api_id ) );
 
-        auto result = target.DisconnectApi(
+        target.DisconnectApi(
             api_id
         );
     } else if( function == "PushToPipe" ) {
@@ -81,7 +81,7 @@ void ParseMessage( Api::GraphServer& target, std::string message )
         archive( CEREAL_NVP( port_id ) );
         archive( CEREAL_NVP( data ) );
 
-        auto result = target.PushToPipe(
+        target.PushToPipe(
             node_id,
             port,
             port_id,
@@ -104,7 +104,7 @@ void ParseMessage( Api::GraphServer& target, std::string message )
         int pipe_subscription_id;
         archive( CEREAL_NVP( pipe_subscription_id ) );
 
-        auto result = target.UnsubscribeToPipe(
+        target.UnsubscribeToPipe(
             pipe_subscription_id
         );
     } else if( function == "DispatchAction" ) {
@@ -135,7 +135,7 @@ void ParseMessage( Api::GraphServer& target, std::string message )
         int state_subscription_id;
         archive( CEREAL_NVP( state_subscription_id ) );
 
-        auto result = target.UnsubscribeToNodeState(
+        target.UnsubscribeToNodeState(
             state_subscription_id
         );
     }

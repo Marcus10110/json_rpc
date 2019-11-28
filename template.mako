@@ -20,7 +20,7 @@ void ParseMessage( ${klass}& target, std::string message )
         archive( CEREAL_NVP( ${arg['name']} ) );
 % endfor
 
-        auto result = target.${m['name']}(
+        ${'auto result = ' if m['returnType'] != 'void' else '' }target.${m['name']}(
 % for arg in m['args']:
             ${arg['name']}${',' if arg != m['args'][-1] else ''}
 % endfor
