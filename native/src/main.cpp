@@ -10,7 +10,7 @@ int main()
 
     try
     {
-        ParseMessage( server, R"({ 
+        Api::ParseMessageForGraphServer( server, R"({ 
             "function": "DispatchAction",
             "node_id": 7 ,
             "action": "stuff"
