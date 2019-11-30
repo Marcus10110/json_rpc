@@ -3,14 +3,16 @@
 
 // tag classes to auto-generate with GENERATE
 #ifdef __CODE_GENERATOR__
-#define GENERATE __attribute__( ( annotate( "generate" ) ) )
+#define GENERATE_RPC __attribute__( ( annotate( "generateRpc" ) ) )
+#define GENERATE_CEREAL __attribute__( ( annotate( "generateCereal" ) ) )
 #else
-#define GENERATE
+#define GENERATE_RPC
+#define GENERATE_CEREAL
 #endif
 
 namespace Api
 {
-    class GENERATE GraphServer
+    class GENERATE_RPC GraphServer
     {
       public:
         int AddNode( std::string node_type );

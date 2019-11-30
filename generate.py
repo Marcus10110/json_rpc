@@ -12,12 +12,16 @@ from mako.template import Template
 libclangPathWindows = "/Program Files/LLVM/bin/libclang.dll"
 libclangPathMacOs = '/usr/local/Cellar/llvm/9.0.0_1/lib/libclang.dylib'
 
-if platform.system() == "Windows" and os.path.exists(libclangPathWindows):
-    clang.cindex.Config.set_library_file(
-        libclangPathWindows)
-elif platform.system() == "Darwin" and os.path.exists(libclangPathMacOs):
-    clang.cindex.Config.set_library_file(
-        libclangPathMacOs)
+# Platform Specific config. Set libClang path and add additional compiler flags.
+extraCompilerOptions = []
+if platform.system() == "Windows":
+    if os.path.exists(libclangPathWindows):
+        clang.cindex.Config.set_library_file(libclangPathWindows)
+elif platform.system() == "Darwin":
+    extraCompilerOptions = ["-I/usr/local/Cellar/llvm/9.0.0_1/include/c++/v1"]
+    if os.path.exists(libclangPathMacOs):
+        clang.cindex.Config.set_library_file(
+            libclangPathMacOs)
 
 headerFiles = ['native/src/server.h']
 
@@ -36,7 +40,7 @@ def get_class_for_rpc(class_):
 
 
 def parse_namespace_for_rpc(ns):
-    return {'name': ns.spelling, 'classes': [get_class_for_rpc(class_) for class_ in ns.get_children() if class_.kind == clang.cindex.CursorKind.CLASS_DECL and any([c for c in class_.get_children() if c.kind == clang.cindex.CursorKind.ANNOTATE_ATTR])]}
+    return {'name': ns.spelling, 'classes': [get_class_for_rpc(class_) for class_ in ns.get_children() if class_.kind == clang.cindex.CursorKind.CLASS_DECL and any([c for c in class_.get_children() if c.kind == clang.cindex.CursorKind.ANNOTATE_ATTR and c.spelling == 'generateRpc'])]}
 
 
 def is_valid_namespace_for_rpc(ns):
@@ -51,7 +55,7 @@ def process_file_for_rpc(path):
     # we need to get the path, then iterate through namespaces, classes, and headers.
     print('!!! Top of process_file_for_rpc')
     translation_unit = index.parse(
-        path, ['-x', 'c++', '-std=c++17', '-D__CODE_GENERATOR__'])
+        path, ['-x', 'c++', '-std=c++17', '-D__CODE_GENERATOR__']+extraCompilerOptions)
     for diag in translation_unit.diagnostics:
         print(diag)
     namespaces = [parse_namespace_for_rpc(ns) for ns in translation_unit.cursor.get_children() if is_valid_namespace_for_rpc(ns)]
