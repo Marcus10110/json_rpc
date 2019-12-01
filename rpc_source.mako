@@ -18,7 +18,7 @@ namespace ${ns['name']}
             ${arg['type']} ${arg['name']};
 % endfor
 % for arg in m['args']:
-            archive( CEREAL_NVP( ${arg['name']} ) );
+            archive( cereal::make_nvp("${arg['json_name']}", ${arg['name']}) );
 % endfor
 
             ${'auto result = ' if m['returnType'] != 'void' else '' }target.${m['name']}(

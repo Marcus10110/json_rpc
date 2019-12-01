@@ -13,8 +13,15 @@
 
 namespace Saleae::Graph
 {
-    struct GENERATE_CEREAL RenderRequestData
+    struct Data
     {
+        virtual int64_t GetMemoryBytes() const noexcept = 0;
+    };
+
+    struct GENERATE_CEREAL RenderRequestData : public Data
+    {
+        int64_t GetMemoryBytes() const noexcept override;
+
         int mId;
         int mWidthPx;
         double mLeftEdgeTime;
@@ -33,8 +40,10 @@ namespace Saleae::Graph
         Vec2 mTo;
     };
 
-    struct GENERATE_CEREAL RenderResponseData
+    struct GENERATE_CEREAL RenderResponseData : public Data
     {
+        int64_t GetMemoryBytes() const noexcept override;
+
         int mId;
 
         struct GENERATE_CEREAL ValueSet

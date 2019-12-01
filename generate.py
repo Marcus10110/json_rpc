@@ -32,7 +32,7 @@ def is_class_or_struct(cursor):
 
 
 def get_args_for_rpc(method):
-    return [{'name': arg.spelling, 'type': arg.type.spelling} for arg in method.get_arguments() if arg.kind ==
+    return [{'name': arg.spelling, 'type': arg.type.spelling, 'json_name': convert_name(arg.spelling)} for arg in method.get_arguments() if arg.kind ==
             clang.cindex.CursorKind.PARM_DECL]
 
 

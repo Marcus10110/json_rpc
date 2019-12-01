@@ -12,14 +12,14 @@ namespace Api
         archive( CEREAL_NVP( function ) );
         if( function == "AddNode" ) {
             std::string node_type;
-            archive( CEREAL_NVP( node_type ) );
+            archive( cereal::make_nvp("nodeType", node_type) );
 
             auto result = target.AddNode(
                 node_type
             );
         } else if( function == "RemoveNode" ) {
             int node_id;
-            archive( CEREAL_NVP( node_id ) );
+            archive( cereal::make_nvp("nodeId", node_id) );
 
             target.RemoveNode(
                 node_id
@@ -31,12 +31,12 @@ namespace Api
             int to_node_id;
             std::string to_port;
             int to_port_index;
-            archive( CEREAL_NVP( from_node_id ) );
-            archive( CEREAL_NVP( from_port ) );
-            archive( CEREAL_NVP( from_port_index ) );
-            archive( CEREAL_NVP( to_node_id ) );
-            archive( CEREAL_NVP( to_port ) );
-            archive( CEREAL_NVP( to_port_index ) );
+            archive( cereal::make_nvp("fromNodeId", from_node_id) );
+            archive( cereal::make_nvp("fromPort", from_port) );
+            archive( cereal::make_nvp("fromPortIndex", from_port_index) );
+            archive( cereal::make_nvp("toNodeId", to_node_id) );
+            archive( cereal::make_nvp("toPort", to_port) );
+            archive( cereal::make_nvp("toPortIndex", to_port_index) );
 
             auto result = target.ConnectPipe(
                 from_node_id,
@@ -48,7 +48,7 @@ namespace Api
             );
         } else if( function == "DisconnectPipe" ) {
             int pipe_id;
-            archive( CEREAL_NVP( pipe_id ) );
+            archive( cereal::make_nvp("pipeId", pipe_id) );
 
             target.DisconnectPipe(
                 pipe_id
@@ -56,8 +56,8 @@ namespace Api
         } else if( function == "ConnectApi" ) {
             int producer_node_id;
             int consumer_node_id;
-            archive( CEREAL_NVP( producer_node_id ) );
-            archive( CEREAL_NVP( consumer_node_id ) );
+            archive( cereal::make_nvp("producerNodeId", producer_node_id) );
+            archive( cereal::make_nvp("consumerNodeId", consumer_node_id) );
 
             auto result = target.ConnectApi(
                 producer_node_id,
@@ -65,7 +65,7 @@ namespace Api
             );
         } else if( function == "DisconnectApi" ) {
             int api_id;
-            archive( CEREAL_NVP( api_id ) );
+            archive( cereal::make_nvp("apiId", api_id) );
 
             target.DisconnectApi(
                 api_id
@@ -75,10 +75,10 @@ namespace Api
             std::string port;
             int port_id;
             std::string data;
-            archive( CEREAL_NVP( node_id ) );
-            archive( CEREAL_NVP( port ) );
-            archive( CEREAL_NVP( port_id ) );
-            archive( CEREAL_NVP( data ) );
+            archive( cereal::make_nvp("nodeId", node_id) );
+            archive( cereal::make_nvp("port", port) );
+            archive( cereal::make_nvp("portId", port_id) );
+            archive( cereal::make_nvp("data", data) );
 
             target.PushToPipe(
                 node_id,
@@ -90,9 +90,9 @@ namespace Api
             int node_id;
             std::string port;
             int port_id;
-            archive( CEREAL_NVP( node_id ) );
-            archive( CEREAL_NVP( port ) );
-            archive( CEREAL_NVP( port_id ) );
+            archive( cereal::make_nvp("nodeId", node_id) );
+            archive( cereal::make_nvp("port", port) );
+            archive( cereal::make_nvp("portId", port_id) );
 
             auto result = target.SubscribeToPipe(
                 node_id,
@@ -101,7 +101,7 @@ namespace Api
             );
         } else if( function == "UnsubscribeToPipe" ) {
             int pipe_subscription_id;
-            archive( CEREAL_NVP( pipe_subscription_id ) );
+            archive( cereal::make_nvp("pipeSubscriptionId", pipe_subscription_id) );
 
             target.UnsubscribeToPipe(
                 pipe_subscription_id
@@ -109,8 +109,8 @@ namespace Api
         } else if( function == "DispatchAction" ) {
             int node_id;
             std::string action;
-            archive( CEREAL_NVP( node_id ) );
-            archive( CEREAL_NVP( action ) );
+            archive( cereal::make_nvp("nodeId", node_id) );
+            archive( cereal::make_nvp("action", action) );
 
             auto result = target.DispatchAction(
                 node_id,
@@ -118,21 +118,21 @@ namespace Api
             );
         } else if( function == "GetNodeState" ) {
             int node_id;
-            archive( CEREAL_NVP( node_id ) );
+            archive( cereal::make_nvp("nodeId", node_id) );
 
             auto result = target.GetNodeState(
                 node_id
             );
         } else if( function == "SubscribeToNodeState" ) {
             int node_id;
-            archive( CEREAL_NVP( node_id ) );
+            archive( cereal::make_nvp("nodeId", node_id) );
 
             auto result = target.SubscribeToNodeState(
                 node_id
             );
         } else if( function == "UnsubscribeToNodeState" ) {
             int state_subscription_id;
-            archive( CEREAL_NVP( state_subscription_id ) );
+            archive( cereal::make_nvp("stateSubscriptionId", state_subscription_id) );
 
             target.UnsubscribeToNodeState(
                 state_subscription_id
