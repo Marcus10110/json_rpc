@@ -1,6 +1,6 @@
 # JSON RPC C++ Prototype
 
-This is a python code generator that generates serialization code to support calling methods on a class using json messages.
+This is a python code generator that generates serialization code to support serializing C++ classes and reading them in typescript.
 
 It's a very crude prototype, which is why everything is a mess.
 
@@ -37,6 +37,6 @@ Note: clang for windows can be downloaded here: http://releases.llvm.org/downloa
 
 ## Goals:
 
-1. RPC system to call GraphServer functions from the front-end
+1. [deprecated] RPC system to call GraphServer functions from the front-end
 2. typescript types for these RPC calls.
 3. cereal C++ library serialize code for actions, state, and data objects.

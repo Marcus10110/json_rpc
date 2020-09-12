@@ -1,68 +1,79 @@
-#include "server.h"
+//#include "server.h"
 #include <iostream>
 #include <exception>
 #include "render_data.h"
-#include "server.gen.h"
-#include "render_data.gen.h"
-#include "converstion.h"
+//#include "server.gen.h"
+//#include "render_data.gen.h"
+// note, we can't mix cereal and rapidjson in the same file since they use different copies of rapidjson.
+// #include "converstion.h"
+
+#include "json_archive.h"
+#include "render_data.gen2.h"
 
 
-std::map<std::string, std::function<std::shared_ptr<const Saleae::Graph::Data>( cereal::JSONInputArchive& archive )>>
-    Saleae::RegisteredDataTypeLoaders;
+#include "rapidjson/writer.h"
 
-static int a = Saleae::RegisterDataType<Saleae::Graph::RenderRequestData>( "Saleae::Graph::RenderRequestData" );
-static int b = Saleae::RegisterDataType<Saleae::Graph::RenderResponseData>( "Saleae::Graph::RenderResponseData" );
+using namespace Saleae::Graph;
 
-int main()
+void PrintDoc( rapidjson::Document& doc )
 {
-    // test handling a json RPC call.
-    Api::GraphServer server;
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer( buffer );
+    doc.Accept( writer ); // NOLINT
+    std::cout << buffer.GetString( ) << "\n";
+}
 
-    try
-    {
-        Api::ParseMessageForGraphServer( server, R"({ 
-            "function": "DispatchAction",
-            "nodeId": 7,
-            "action": "stuff"
-        })" );
-    }
-    catch( std::exception& ex )
-    {
-        std::cout << "error: " << ex.what() << "\n";
-    }
+void Test( )
+{
+    RenderRequestData render_request;
+    render_request.mId = 42;
+    render_request.mWidthPx = 300;
+    render_request.mLeftEdgeTime = 42.42;
+    render_request.mSecondsPerPx = 0.001;
 
-    // Test serializing a Data object.
-    std::stringstream ss;
-    cereal::JSONOutputArchive archive( ss );
+    rapidjson::Document doc;
+    auto& a = doc.GetAllocator( );
+    Saleae::Archive ar{ &a };
 
-    Saleae::Graph::RenderResponseData render_response;
+    ArchiveJson( render_request, ar );
+
+    doc.CopyFrom( *ar.mValue, a );
+
+    PrintDoc( doc );
+
+    // test load:
+    Saleae::Archive load_ar{ nullptr, std::move(ar.mValue) };
+    RenderRequestData loaded_request;
+
+    ArchiveJson( loaded_request, load_ar );
+
+    std::cout << "original: " << render_request.mId << "; loaded: " << loaded_request.mId << "\n";
+
+    RenderResponseData render_response;
     render_response.mId = 42;
-    render_response.mValueSet = { { 1, 2, 3, 4 }, 0, 1e9 };
-    render_response.mLines = { { { 1, 2 }, { 3, 4 } } };
-    Saleae::Graph::serialize( archive, render_response );
-    std::cout << "RenderResponseData serialization example:\n" << ss.str() << "\n";
+    render_response.mValueSet = { {1,2,3,4}, 0.001, 0.002 };
+    render_response.mLines = { { {0,0}, {1,1} } };
+    render_response.mLineStrip = { { 10, 20 } };
 
+    rapidjson::Document doc2;
+    auto& a2 = doc.GetAllocator( );
+    Saleae::Archive ar2{ &a2 };
+    ArchiveJson( render_response, ar2 );
+    doc2.CopyFrom( *ar2.mValue, a2 );
 
-    // attempt dynamic load:
-    std::string input_json = R"({
-        "TypeId": "Saleae::Graph::RenderRequestData",
-        "Saleae::Graph::RenderRequestData": {
-            "id": 42,
-            "widthPx": 1,
-            "leftEdgeTime": 1,
-            "secondsPerPx": 1
-        }
-    })";
+    PrintDoc( doc2 );
 
-    std::stringstream ss2( input_json );
-    cereal::JSONInputArchive archive2( ss2 );
+    // test load:
+    Saleae::Archive load_repsonse_ar{ nullptr, std::move(ar2.mValue) };
+    RenderResponseData loaded_response;
 
-    auto loaded_render_request_data = Saleae::LoadRegisteredType( archive2 );
-    auto casted_object = std::dynamic_pointer_cast<const Saleae::Graph::RenderRequestData>( loaded_render_request_data );
-    std::cout << "dynamic load serialization example:\n";
-    std::cout << "mId: " << casted_object->mId << "\n";
-    std::cout << "mWidthPx: " << casted_object->mWidthPx << "\n";
-    std::cout << "mLeftEdgeTime: " << casted_object->mLeftEdgeTime << "\n";
-    std::cout << "mSecondsPerPx: " << casted_object->mSecondsPerPx << "\n";
+    ArchiveJson( loaded_response, load_repsonse_ar );
+
+    std::cout << "original: " << render_response.mId << "; loaded: " << loaded_response.mId << "\n";
+}
+
+int main( )
+{
+    Test( );
     return 0;
 }

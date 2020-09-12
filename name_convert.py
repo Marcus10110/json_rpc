@@ -1,3 +1,6 @@
+import re
+from re import search
+
 name_test_set = [
     ['mId', 'id'],
     ['mWidthPx', 'widthPx'],
@@ -38,6 +41,11 @@ type_test_set = [
     ['std::string', 'string'],
     ['Saleae::Graph::Vec2', 'Vec2'],
     ['Saleae::Graph::RenderResponseData::ValueSet', 'ValueSet'],
+    ['std::vector<double>', 'number[]'],
+    ['std::map<int, std::string>', 'Map<number, string>'],
+    ['std::map<int, Saleae::Graph::Vec2>', 'Map<number, Vec2>'],
+    ['std::map<int, std::vector<std::string>>', 'Map<number, string[]>'],
+    ['std::map<int, std::vector<Saleae::Graph::Vec2>>', 'Map<number, Vec2[]>'],
 ]
 
 number_types = ['int', 'double', 'float']
@@ -49,7 +57,7 @@ def replace_character(str, index, new_char):
     return ''.join(temp)
 
 
-def convert_name(original):
+def convert_name_for_json(original):
     if len(original) >= 2 and original[0] == 'm' and original[1].isupper():
         # handle members.
         new_string = original[1].lower() + original[2:]
@@ -66,25 +74,45 @@ def convert_name(original):
     return original
 
 
-def convert_type(original):
-    if "::" in original:
-        return original[original.rfind('::')+2:]
-    if any([number_type == original for number_type in number_types]):
-        return 'number'
-    return original
+def convert_type_for_ts(original):
+    ts_type = original
+    scope_range = ts_type
+    if "<" in scope_range:
+        scope_range = scope_range[0: scope_range.find("<")]
+    if "::" in scope_range:
+        ts_type = ts_type[scope_range.rfind('::', 0, )+2:]
+    if any([number_type == ts_type for number_type in number_types]):
+        ts_type = 'number'
+    vec = re.search("^vector<(.+)>$", ts_type)
+    if vec:
+        ts_type = convert_type_for_ts(vec.group(1)) + "[]"
+    map = re.search("^map<(.+),(.+)>$", ts_type)
+    if map:
+        ts_type = "Map<{}, {}>".format(convert_type_for_ts(map.group(1)), convert_type_for_ts(map.group(2)))
+    return ts_type
 
+
+any_failed = False
 
 for pair in name_test_set:
     input = pair[0]
     expected = pair[1]
-    actual = convert_name(input)
+    actual = convert_name_for_json(input)
     result = actual == expected
     print(('✔ ' if result else ' FAILED: ') + pair[0] + ' -> ' + actual + ' [' + pair[1] + ']')
+    if not result:
+        any_failed = True
+
 
 print('\nTesting types:')
 for pair in type_test_set:
     input = pair[0]
     expected = pair[1]
-    actual = convert_type(input)
+    actual = convert_type_for_ts(input)
     result = actual == expected
     print(('✔ ' if result else ' FAILED: ') + pair[0] + ' -> ' + actual + ' [' + pair[1] + ']')
+    if not result:
+        any_failed = True
+
+if any_failed:
+    quit()
