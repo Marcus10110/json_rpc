@@ -4,7 +4,7 @@ import os
 import platform
 import sys
 import clang.cindex
-from typing import List, Dict, Tuple, Sequence, TypedDict, Any, NamedTuple
+from typing import List, Dict, Tuple, Sequence, TypedDict, Any, NamedTuple, Set
 from name_convert import convert_name_for_json, convert_type_for_ts
 
 
@@ -89,6 +89,12 @@ def is_valid_class_for_cereal(class_):
     return True
 
 
+def is_namespace(ns):
+    if ns.kind == clang.cindex.CursorKind.NAMESPACE:
+        return True
+    return False
+
+
 def is_valid_namespace_for_cereal(ns):
     # checks to see if the cursor is a namespace and that it includes at least one class or struct with the correct attribute.
     if ns.kind != clang.cindex.CursorKind.NAMESPACE:
@@ -108,14 +114,16 @@ def concatenate_namespaces(base: str, new: str) -> str:
 def get_namespace_cursors(translation_unit_cursor, namespace_path='') -> List[NamespaceCursor]:
     # this extracts the namespace cursor and complete name (including ::) for all namespaces bellow the root.
     # this recursively explores all namespaces.
-    # not sure if this will work more than 2 deep.
+    # not sure if this will work more than 2 deep. (it does not)
     namespace_cursors: List[NamespaceCursor] = []
     for child in translation_unit_cursor.get_children():
         if(is_valid_namespace_for_cereal(child)):
             new_entry: NamespaceCursor = {'cursor': child, 'path': concatenate_namespaces(namespace_path, child.spelling)}
             namespace_cursors.append(new_entry)
-        if(child.kind == clang.cindex.CursorKind.NAMESPACE and any([is_valid_namespace_for_cereal(grandchild) for grandchild in child.get_children()])):
-            namespace_cursors.extend(get_namespace_cursors(child, child.spelling))
+        if is_namespace(child):
+            namespace_cursors.extend(get_namespace_cursors(child, concatenate_namespaces(namespace_path, child.spelling)))
+        # if(child.kind == clang.cindex.CursorKind.NAMESPACE and any([is_valid_namespace_for_cereal(grandchild) for grandchild in child.get_children()])):
+        #    namespace_cursors.extend(get_namespace_cursors(child, child.spelling))
     return namespace_cursors
 
 # this recursively finds and parses the members of all classes at and below the provided cursor.
@@ -155,10 +163,12 @@ def parse_namespace(ns, path) -> Namespace:
     return {'name': path, 'classes': classes}
 
 
-def parse_header(path: str) -> ParsedHeader:
+def parse_header(path: str, includes: Set[str]) -> ParsedHeader:
     # parses the heder file for tagged classes and structs.
     original_header_name = os.path.basename(path)
-    translation_unit = index.parse(path, ['-x', 'c++', '-std=c++17', '-D__CODE_GENERATOR__']+extraCompilerOptions)
+    compiler_options = ['-x', 'c++', '-std=c++17', '-D__CODE_GENERATOR__', '-D_SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING']+extraCompilerOptions
+    compiler_options.extend(["-I" + inc for inc in list(includes)])
+    translation_unit = index.parse(path, compiler_options)
     for diag in translation_unit.diagnostics:
         print(diag)
     namespace_cursors = get_namespace_cursors(translation_unit.cursor)
@@ -169,3 +179,11 @@ def parse_header(path: str) -> ParsedHeader:
         'include': original_header_name,
         'namespaces': namespaces
     }
+
+
+def header_includes_exports(path: str) -> bool:
+    with open(path) as f:
+        data = f.read()
+    if "GENERATE_CEREAL" in data:
+        return True
+    return False

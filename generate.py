@@ -1,14 +1,25 @@
 #!/usr/bin/env python
-import pprint
 import os
-from parse_header import parse_header
+import pprint
 
 from mako.template import Template
-# from name_convert import convert_name, convert_type
 
-headerFiles = ['native/src/render_data.h']
+from parse_graphio import get_libclang_inputs, parse_compile_commands
+from parse_header import header_includes_exports, parse_header
 
-# helper to manually load file before passing to mako, to fix the line ending problems on windows.
+# Set path to graph-io repository root and set path to compile_commands.json
+repo_root = "C:\\Users\\Mark\\Software\\graph-io"
+build_dir = os.path.join(repo_root, "build", "win64")
+compile_commands_path = os.path.join(build_dir, "compile_commands.json")
+
+
+compile_commands = parse_compile_commands(compile_commands_path)
+libclang_inputs = get_libclang_inputs(compile_commands, repo_root)
+
+# use this to test the render_data.h file that's included.
+# libclang_inputs = {
+#    "native/src/render_data.h": set()
+# }
 
 
 def load_template(filename):
@@ -18,17 +29,25 @@ def load_template(filename):
     return template
 
 
-# loop through all provided headerFiles and generate json code for them.
-
-
+# load the mako templates.
 archive_header_template = load_template('archive_header.mako')
 archive_src_template = load_template('archive_source.mako')
 archive_ts_template = load_template('cereal_ts.mako')
 
-for header in headerFiles:
-    header_data = parse_header(header)
-    pprint.pprint(header_data)
 
+count = 0
+
+for header, includes in libclang_inputs.items():
+    if header_includes_exports(header) == False:
+        continue
+    header_data = parse_header(header, includes)
+    pprint.pprint(header_data)
+#    quit()
+    count += 1
+    if count > 10:
+        quit
+    # continue
+    # quit()
     # generate a header file!
     if(len(header_data['namespaces']) == 0):
         print('no GENERATE_CEREAL classes found in ' + header)
