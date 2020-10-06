@@ -3,6 +3,16 @@
 #include "${generated_include}"
 
 % for ns in params['namespaces']:
+% if ns['name'] == '':
+% for Class in ns['classes']:
+void ArchiveJson(${Class['full_name']}& target, Saleae::Archive& archive )
+{
+% for m in Class['members']:
+    ArchiveByPointer( target.${m['name']}, "/${m['name']}", archive );
+% endfor
+}
+% endfor
+% else:
 namespace ${ns['name']} 
 {
 % for Class in ns['classes']:
@@ -14,4 +24,5 @@ namespace ${ns['name']}
     }
 % endfor
 }
+% endif
 % endfor

@@ -30,24 +30,21 @@ allowed_categorys = ["nodes", "core", "server"]
 
 def is_public_src_file(entry: CompileCommand) -> bool:
     path = Path(entry['file'])
-
+    # handle C:\Users\Mark\Software\graph-io\core\protocol_analyzer\src\protocol_analyzer too
     parts = path.parts
-    if parts[-2] != "src":
-        return False
-    if parts[-5] != "graph-io":
-        return False
-    category = parts[-4]
-    if not category in allowed_categorys:
-        return False
-    return True
+    if "src" in parts and "graph-io" in parts and any([category in parts for category in allowed_categorys]):
+        return True
+    return False
 
 
 def get_target(entry: CompileCommand) -> str:
     if not is_public_src_file(entry):
         raise Exception()
-    path = Path(entry['file'])
+    path = Path(entry['file']).parts
+    root_index = path.index("graph-io")
+    return "{}\\{}".format(path[root_index+1], path[root_index+2])
 #    return os.path.join(path.parts[:-2].)
-    return "{}\\{}".format(path.parts[-4], path.parts[-3])
+    # return "{}\\{}".format(path.parts[-4], path.parts[-3])
 
 
 # for every target, collect all include directories. (absolute only)
@@ -76,8 +73,20 @@ def get_libclang_inputs(data: List[CompileCommand], repo_root: str) -> Dict[str,
         public_include_folder = get_include_dir_for_target(target, repo_root)
         if not os.path.exists(public_include_folder):
             continue
-        headers = [os.path.join(public_include_folder, f) for f in os.listdir(public_include_folder) if os.path.isfile(os.path.join(public_include_folder, f)) and Path(os.path.join(public_include_folder, f)).suffix == ".h"
+        include_dir_contents = os.listdir(public_include_folder)
+        headers = []
+        headers = [os.path.join(public_include_folder, f) for f in include_dir_contents if os.path.isfile(os.path.join(public_include_folder, f)) and Path(os.path.join(public_include_folder, f)).suffix == ".h"
                    ]
+        # snag nested headers
+        for item in include_dir_contents:
+            full_path = os.path.join(public_include_folder, item)
+            if os.path.isfile(full_path) and Path(full_path).suffix == ".h":
+                headers.append(full_path)
+            if os.path.isdir(full_path):
+                # TODO: allow complete recursion
+                nested_dir_contents = os.listdir(full_path)
+                headers.extend([os.path.join(full_path, f) for f in nested_dir_contents if os.path.isfile(
+                    os.path.join(full_path, f)) and Path(os.path.join(full_path, f)).suffix == ".h"])
         for include in headers:
             all_headers[include] = includes_lookup[target]
     return all_headers

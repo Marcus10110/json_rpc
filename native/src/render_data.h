@@ -1,24 +1,23 @@
 #pragma once
 #include <vector>
 #include <cstdint>
+#include "graph_time.h"
 
 // tag classes to auto-generate with GENERATE
 #ifdef __CODE_GENERATOR__
 #define GENERATE_RPC __attribute__( ( annotate( "generate" ) ) )
-#define GENERATE_CEREAL __attribute__( ( annotate( "generate" ) ) )
 #else
 #define GENERATE_RPC
-#define GENERATE_CEREAL
 #endif
 
 namespace Saleae::Graph
 {
-    struct Data
+    class Data
     {
         virtual int64_t GetMemoryBytes() const noexcept = 0;
     };
 
-    struct GENERATE_CEREAL RenderRequestData : public Data
+    struct GENERATE_ARCHIVE RenderRequestData : public Data
     {
         int64_t GetMemoryBytes() const noexcept override;
 
@@ -26,27 +25,28 @@ namespace Saleae::Graph
         int mWidthPx;
         double mLeftEdgeTime;
         double mSecondsPerPx;
+        GraphTime mStartGraphTime;
     };
 
-    struct GENERATE_CEREAL Vec2
+    struct GENERATE_ARCHIVE Vec2
     {
         float mX{ 0.0f };
         float mY{ 0.0f };
     };
 
-    struct GENERATE_CEREAL Line
+    struct GENERATE_ARCHIVE Line
     {
         Vec2 mFrom;
         Vec2 mTo;
     };
 
-    struct GENERATE_CEREAL RenderResponseData : public Data
+    struct GENERATE_ARCHIVE RenderResponseData : public Data
     {
         int64_t GetMemoryBytes() const noexcept override;
 
         int mId;
 
-        struct GENERATE_CEREAL ValueSet
+        struct GENERATE_ARCHIVE ValueSet
         {
             using AnalogValue = int16_t;
             std::vector<AnalogValue> mValues;

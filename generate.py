@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import os
-import pprint
+from pprint import pprint
 
 from mako.template import Template
 
@@ -36,13 +36,17 @@ archive_ts_template = load_template('cereal_ts.mako')
 
 
 count = 0
+# print(libclang_inputs.keys())
+# quit()
 
 for header, includes in libclang_inputs.items():
     if header_includes_exports(header) == False:
         continue
     header_data = parse_header(header, includes)
-    pprint.pprint(header_data)
-#    quit()
+
+    pprint(header_data)
+    # continue
+    # quit()
     count += 1
     if count > 10:
         quit
@@ -50,7 +54,7 @@ for header, includes in libclang_inputs.items():
     # quit()
     # generate a header file!
     if(len(header_data['namespaces']) == 0):
-        print('no GENERATE_CEREAL classes found in ' + header)
+        print('no GENERATE_ARCHIVE classes found in ' + header)
         continue
 
     generated_header_path = os.path.splitext(header)[0] + '.gen2.h'
@@ -58,13 +62,14 @@ for header, includes in libclang_inputs.items():
     generated_ts_path = os.path.splitext(header)[0] + '.gen2.ts'
     generated_include = os.path.basename(generated_header_path)
     print(generated_header_path, generated_src_path, generated_include)
-
-    generated_header_content = archive_header_template.render(params=header_data)
-    print(generated_header_content)
+    needs_converter = any(
+        [any([class_['extends_data'] for class_ in ns['classes']]) for ns in header_data['namespaces']])
+    generated_header_content = archive_header_template.render(params=header_data, needs_converter=needs_converter)
+    # print(generated_header_content)
     generated_src_content = archive_src_template.render(params=header_data, generated_include=generated_include)
-    print(generated_src_content)
+    # print(generated_src_content)
     generated_ts_content = archive_ts_template.render(params=header_data)
-    print(generated_ts_content)
+    # print(generated_ts_content)
 
     generated_header_file = open(generated_header_path, "w")
     n = generated_header_file.write(generated_header_content)

@@ -10,6 +10,7 @@ namespace Saleae::Graph
         ArchiveByPointer( target.mWidthPx, "/mWidthPx", archive );
         ArchiveByPointer( target.mLeftEdgeTime, "/mLeftEdgeTime", archive );
         ArchiveByPointer( target.mSecondsPerPx, "/mSecondsPerPx", archive );
+        ArchiveByPointer( target.mStartGraphTime, "/mStartGraphTime", archive );
     }
     void ArchiveJson(Vec2& target, Archive& archive )
     {

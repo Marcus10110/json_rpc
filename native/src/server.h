@@ -4,10 +4,10 @@
 // tag classes to auto-generate with GENERATE
 #ifdef __CODE_GENERATOR__
 #define GENERATE_RPC __attribute__( ( annotate( "generate" ) ) )
-#define GENERATE_CEREAL __attribute__( ( annotate( "generate" ) ) )
+#define GENERATE_ARCHIVE __attribute__( ( annotate( "generate" ) ) )
 #else
 #define GENERATE_RPC
-#define GENERATE_CEREAL
+#define GENERATE_ARCHIVE
 #endif
 
 namespace Api

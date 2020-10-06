@@ -6,6 +6,7 @@ export interface RenderRequestData {
   widthPx: number;
   leftEdgeTime: number;
   secondsPerPx: number;
+  startGraphTime: GraphTime;
 }
 export interface Vec2 {
   x: number;
